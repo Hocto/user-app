@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Registration Form</title>
+</head>
+<body>
+<h1>Please enter your name and pick the Sectors you are currently involved in.</h1>
+<br/>
+<br/>
+<form id="user-form">
+    <label for="name">Name:</label>
+    <input type="text" id="name" name="name" th:field="*{name}" required>
+    <br/>
+    <br/>
+    <label for="sectorItems">Sectors:</label>
+    <select id="sectorItems" name="sectorItems" multiple size="5" required>
+        <option th:each="sector : ${sectorItems}" th:value="${sector.id}" th:text="${sector.name}"></option>
+    </select>
+    <br/>
+    <br/>
+    <label for="agree">Agree to terms:</label>
+    <input type="checkbox" id="agree" name="agreedToTerms" th:field="*{agreedToTerms}" required>
+    <br/>
+    <br/>
+    <input type="submit" value="Save">
+</form>
+<script>
+    const selectElement = document.getElementById("sectorItems");
+
+    selectElement.addEventListener("change", function () {
+
+        const selectedOptions = Array.from(selectElement.selectedOptions);
+
+        const selectedValues = selectedOptions.map(option => option.value);
+        selectedOptionsElement.textContent = "Selected options: " + selectedValues.join(", ");
+    });
+
+    const form = document.getElementById("user-form");
+
+    document.addEventListener("DOMContentLoaded", async function () {
+        const selectElement = document.getElementById("sectorItems");
+
+        try {
+            // Make an AJAX request to fetch data from the server
+            const response = await fetch("/api/v1/sectorItems"); // Update the URL to match your server's endpoint
+            const data = await response.json();
+
+            // Loop through the data and create <option> elements
+            data.sectorItems.forEach((item) => {
+                const option = document.createElement("option");
+                option.value = item.id; // Set the value attribute
+                option.textContent = item.name; // Set the text content
+                selectElement.appendChild(option); // Append the option to the <select>
+            });
+        } catch (error) {
+            console.error("Error fetching data:", error);
+        }
+    });
+
+
+    form.addEventListener("submit", function (event) {
+        event.preventDefault(); // Prevent the default form submission behavior
+
+        // Collect user input data
+        const name = form.name.value;
+        const sectorItems = form.sectorItems.value;
+        const agreeToTerms = form.agreedToTerms.checked;
+
+        // Send the data to the server via an HTTP request (e.g., POST)
+        fetch("http://localhost:8080/api/v1/user", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                name: name,
+                sectorItems: sectorItems,
+                agreeToTerms: agreeToTerms
+            }),
+        })
+        .then((response) => response.json())
+        .then((data) => {
+            // Optionally, refill the form with the saved data
+            form.name.value = data.name;
+            form.sector.value = data.sector;
+            form.agreeToTerms.checked = data.agreeToTerms;
+        })
+        .catch((error) => {
+            console.error("Error:", error);
+        });
+    });
+
+
+</script>
+</body>
+</html>
